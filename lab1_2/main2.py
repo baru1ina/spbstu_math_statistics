@@ -9,7 +9,6 @@ from scipy.stats import t
 from scipy.stats import uniform
 from scipy.stats import poisson
 
-random_var = norm
 def calcGMean(distName, sample_size, param = 0):
     summary = [0, 0]
     for i in range(1000):
@@ -20,10 +19,12 @@ def calcGMean(distName, sample_size, param = 0):
             x = distName.rvs(df=param, size=sample_size)
         else:
             x = distName.rvs(size=sample_size)
+        # print(distName, '\n', x)
         mean = 0
         for j in x:
             mean += j
         mean = mean / sample_size
+        # mean = np.mean(x)
         summary[0] += mean
         summary[1] += mean**2
     summary[0] /= 1000
@@ -40,10 +41,12 @@ def calcGMed(distName, sample_size, param = 0):
             x = distName.rvs(df=param, size=sample_size)
         else:
             x = distName.rvs(size=sample_size)
+        x.sort()
         if (sample_size) % 2 != 0:
             med = x[sample_size//2]
         else:
             med = (x[sample_size//2] + x[sample_size//2 - 1]) / 2
+        # med = np.median(x)
         summary[0] += med
         summary[1] += med**2
     summary[0] /= 1000
@@ -60,7 +63,8 @@ def calcZ_R(distName, sample_size, param = 0):
             x = distName.rvs(df=param, size=sample_size)
         else:
             x = distName.rvs(size=sample_size)
-        z_R = (x[0] + x[sample_size-1]) / 2
+        x.sort()
+        z_R = (x[0] + x[-1]) / 2
         summary[0] += z_R
     summary[0] /= 1000
     summary[1] = summary[1] / 1000 - (summary[0]) ** 2
@@ -77,6 +81,7 @@ def calcZ_Q(distName, sample_size, param=0):
             x = distName.rvs(df=param, size=sample_size)
         else:
             x = distName.rvs(size=sample_size)
+        x.sort()
         p_arr = [0.25, 0.75]
         z_p = 0
         z_Q = 0
@@ -103,6 +108,7 @@ def calcZ_tr(distName, sample_size, param = 0):
             x = distName.rvs(df=param, size=sample_size)
         else:
             x = distName.rvs(size=sample_size)
+        x.sort()
         s = 0
         for i in range(r, sample_size-r-1):
             s += x[i]
@@ -117,19 +123,19 @@ def calcZ_tr(distName, sample_size, param = 0):
 def output(distName, param=0):
     sample_size = [10, 100, 1000]
     for i in sample_size:
-        mean = calcGMean(norm, i, param)
+        mean = calcGMean(distName, i, param)
         print("n = ", i, " выборочное среднее E(z) = ", '%.5f' % mean[0])
         print("n = ", i, " выборочное среднее D(z) = ", '%.5f' % mean[1])
-        med = calcGMed(norm, i, param)
+        med = calcGMed(distName, i, param)
         print("n = ", i, " медиана E(z) = ", '%.5f' % med[0])
         print("n = ", i, " медиана D(z) = ", '%.5f' % med[1])
-        z_R = calcZ_R(norm, i, param)
+        z_R = calcZ_R(distName, i, param)
         print("n = ", i, " полусумма экстремальных выборочных элементов E(z) = ", '%.5f' % z_R[0])
         print("n = ", i, " полусумма экстремальных выборочных элементов D(z) = ", '%.5f' % z_R[1])
-        z_Q = calcZ_Q(norm, i, param)
+        z_Q = calcZ_Q(distName, i, param)
         print("n = ", i, " полусумма квартилей E(z) = ", '%.5f' % z_Q[0])
         print("n = ", i, " полусумма квартилей D(z) = ", '%.5f' % z_Q[1])
-        z_tr = calcZ_tr(norm, i, param)
+        z_tr = calcZ_tr(distName, i, param)
         print("n = ", i, " усечённое среднее E(z) = ", '%.5f' % z_tr[0])
         print("n = ", i, " усечённое среднее D(z) = ", '%.6f' % z_tr[1])
         print('\n')
