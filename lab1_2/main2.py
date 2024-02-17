@@ -17,6 +17,8 @@ def calcGMean(distName, sample_size, param = 0):
             x = distName.rvs(mu=param, size=sample_size)
         elif distName == t:
             x = distName.rvs(df=param, size=sample_size)
+        elif distName == uniform:
+            x = distName.rvs(loc=-np.sqrt(3), scale=2*np.sqrt(3), size=sample_size)
         else:
             x = distName.rvs(size=sample_size)
         # print(distName, '\n', x)
@@ -39,6 +41,8 @@ def calcGMed(distName, sample_size, param = 0):
             x = distName.rvs(mu=param, size=sample_size)
         elif distName == t:
             x = distName.rvs(df=param, size=sample_size)
+        elif distName == uniform:
+            x = distName.rvs(loc=-np.sqrt(3), scale=2*np.sqrt(3), size=sample_size)
         else:
             x = distName.rvs(size=sample_size)
         x.sort()
@@ -50,7 +54,8 @@ def calcGMed(distName, sample_size, param = 0):
         summary[0] += med
         summary[1] += med**2
     summary[0] /= 1000
-    summary[1] = summary[1] / 1000 - (summary[0]) ** 2
+    summary[1] /= 1000
+    summary[1] -= (summary[0]) ** 2
     return summary
 
 def calcZ_R(distName, sample_size, param = 0):
@@ -61,13 +66,17 @@ def calcZ_R(distName, sample_size, param = 0):
             x = distName.rvs(mu=param, size=sample_size)
         elif distName == t:
             x = distName.rvs(df=param, size=sample_size)
+        elif distName == uniform:
+            x = distName.rvs(loc=-np.sqrt(3), scale=2*np.sqrt(3), size=sample_size)
         else:
             x = distName.rvs(size=sample_size)
         x.sort()
-        z_R = (x[0] + x[-1]) / 2
+        z_R = (x[0] + x[-1]) / 2.0
         summary[0] += z_R
+        summary[1] += z_R**2
     summary[0] /= 1000
-    summary[1] = summary[1] / 1000 - (summary[0]) ** 2
+    summary[1] /= 1000
+    summary[1] -= (summary[0] ** 2)
     return summary
 
 
@@ -79,26 +88,30 @@ def calcZ_Q(distName, sample_size, param=0):
             x = distName.rvs(mu=param, size=sample_size)
         elif distName == t:
             x = distName.rvs(df=param, size=sample_size)
+        elif distName == uniform:
+            x = distName.rvs(loc=-np.sqrt(3), scale=2*np.sqrt(3), size=sample_size)
         else:
             x = distName.rvs(size=sample_size)
         x.sort()
         p_arr = [0.25, 0.75]
-        z_p = 0
         z_Q = 0
         for p in p_arr:
-            if isinstance(sample_size*p, int):
-                z_p = x[sample_size*p-1]
+            z_p = 0
+            if isinstance(sample_size * p, int):
+                z_p = x[(sample_size * p) - 1]
             else:
-                z_p = x[int(sample_size*p)]
+                z_p = x[int(sample_size * p)]
             z_Q += z_p
-        summary[0] += z_Q/2
-        summary[1] = (z_Q/2) ** 2
+        z_Q /= 2.0
+        summary[0] += z_Q
+        summary[1] += (z_Q ** 2)
     summary[0] /= 1000
-    summary[1] = summary[1] / 1000 - (summary[0]) ** 2
+    summary[1] /= 1000
+    summary[1] -= (summary[0] ** 2)
     return summary
 
 def calcZ_tr(distName, sample_size, param = 0):
-    r = int(sample_size/4)
+    r = int(np.round(sample_size/4.0))
     summary = [0, 0]
     for i in range(1000):
         x = []
@@ -106,17 +119,20 @@ def calcZ_tr(distName, sample_size, param = 0):
             x = distName.rvs(mu=param, size=sample_size)
         elif distName == t:
             x = distName.rvs(df=param, size=sample_size)
+        elif distName == uniform:
+            x = distName.rvs(loc=-np.sqrt(3), scale=2*np.sqrt(3), size=sample_size)
         else:
             x = distName.rvs(size=sample_size)
         x.sort()
         s = 0
         for i in range(r, sample_size-r-1):
             s += x[i]
-        s = 1/(sample_size-2*r)*s
+        s = (1.0 / (sample_size - 2 * r)) * s
         summary[0] += s
-        summary[0] += s**2
+        summary[1] += s**2
     summary[0] /= 1000
-    summary[1] = summary[1] / 1000 - (summary[0]) ** 2
+    summary[1] /= 1000
+    summary[1] -= (summary[0] ** 2)
     return summary
 
 
@@ -146,11 +162,11 @@ output(norm)
 print("Распределение Коши(0,1)\n")
 output(cauchy)
 
-print("Равномерное распределение (-(3^1/2),(3^1/2))\n")
-output(uniform)
-
 print("Распределение Стьюдента(0, 3)\n")
 output(t, 3)
+
+print("Равномерное распределение (-(3^1/2),(3^1/2))\n")
+output(uniform)
 
 print("Распределение Пуассона(5)\n")
 output(poisson, 5)
