@@ -1,6 +1,8 @@
 import numpy as np
 import scipy.stats as sps
 import math
+import matplotlib.pyplot as plt
+import matplotlib.colors
 
 
 def mnk(x: list, y: list):
@@ -18,8 +20,9 @@ def mnk(x: list, y: list):
     b_eval = (avg_xy - avg_x * avg_y) / (avg_x_sqrt - avg_x ** 2)
     a_eval = avg_y - avg_x * b_eval
 
-    print("МНК  &",  "{:12.4e}".format(a_eval), "&", "{:12.4e}".format(abs(a_eval - 2)),
-           "&", "{:12.4e}".format(b_eval), "&", "{:12.4e}".format(abs(b_eval - 2)), "\\\\ \\hline\n")
+    print("МНК  &", '%.3f' % a_eval, "&", '%.3f' % abs(a_eval - 2), "&", '%.2f' % (abs(a_eval - 2)/2 * 100),
+          "&", '%.3f' % b_eval, "&", '%.3f' % abs(b_eval - 2),  "&", '%.2f' % (abs(b_eval - 2)/2 * 100), "\\\\ \\hline")
+    return a_eval, b_eval
 
 
 def mnm(x: list, y: list):
@@ -51,22 +54,89 @@ def mnm(x: list, y: list):
 
     a_eval_R = med_y - b_eval_R * med_x
 
-    print("МНМ  &", "{:12.4e}".format(a_eval_R), "&", "{:12.4e}".format(abs(a_eval_R - 2)),
-          "&", "{:12.4e}".format(b_eval_R), "&", "{:12.4e}".format(abs(b_eval_R - 2)), "\\\\ \\hline")
+    # print("МНМ  &", "{:12.4e}".format(a_eval_R), "&", "{:12.4e}".format(abs(a_eval_R - 2)),
+    #       "&", "{:12.4e}".format(b_eval_R), "&", "{:12.4e}".format(abs(b_eval_R - 2)), "\\\\ \\hline")
 
+    print("МНМ  &", '%.3f' % a_eval_R, "&", '%.3f' % abs(a_eval_R - 2), "&", '%.2f' % (abs(a_eval_R - 2)/2 * 100),
+          "&", '%.3f' % b_eval_R, "&", '%.3f' % abs(b_eval_R - 2), "&", '%.2f' % (abs(b_eval_R - 2)/2 * 100), "\\\\ \\hline")
+
+    return a_eval_R, b_eval_R
 
 
 x = np.linspace(-1.8, 2, 20)
 e = sps.norm.rvs(size=20)
-
 y = [2 + 2 * x[i] + e[i] for i in range(len(x))]
+
 print("Без возмущений: ")
-mnk(list(x), y)
-mnm(list(x), y)
+a_eval, b_eval = mnk(list(x), y)
+a_eval_R, b_eval_R = mnm(list(x), y)
+
+y_mnk = [a_eval + b_eval * x[i] + e[i] for i in range(len(x))]
+y_mnm = [a_eval_R + b_eval_R * x[i] + e[i] for i in range(len(x))]
+
+plt.subplot(2, 2, 1)
+plt.plot(x, y, color='crimson',  label="эталонная зависимость")
+plt.plot(x, y_mnk, '--', color='cornflowerblue', label="робастная оценка МНК")
+plt.plot(x, y_mnm, '--', color='yellowgreen', label="робастная оценка МНМ")
+plt.title("Без возмущений")
+plt.legend()
+plt.xlabel(r'$x_i$')
+plt.ylabel(r'$y_i = a + b * x_i + e_i$')
+plt.annotate(f"a_mnk = {'%.3f' % a_eval}, \nb_mnk = {'%.3f' % b_eval}, "
+             f"\na_mnm = {'%.3f' % a_eval_R}, \nb_mnm = {'%.3f' % b_eval_R}", xy=(0.5, min(y)))
+
 
 y[0] = y[0] + 10
 y[19] = y[19] - 10
 
 print("\nС возмущениями: ")
-mnk(list(x), y)
-mnm(list(x), y)
+a_eval_D, b_eval_D = mnk(list(x), y)
+a_eval_R_D, b_eval_R_D = mnm(list(x), y)
+
+y_mnk_D = [a_eval_D + b_eval_D * x[i] + e[i] for i in range(len(x))]
+y_mnm_D = [a_eval_R_D + b_eval_R_D * x[i] + e[i] for i in range(len(x))]
+
+plt.subplot(2, 2, 2)
+plt.plot(x, y, color='crimson',  label="эталонная зависимость")
+plt.plot(x, y_mnk_D, '--', color='cornflowerblue', label="робастная оценка МНК")
+plt.plot(x, y_mnm_D, '--', color='yellowgreen', label="робастная оценка МНМ")
+plt.title("С возмущениями")
+plt.legend()
+plt.xlabel(r'$x_i$')
+plt.ylabel(r'$y_i = a + b * x_i + e_i$')
+plt.annotate(f"a_mnk = {'%.3f' % a_eval_D},\nb_mnk = {'%.3f' % b_eval_D},"
+             f" \na_mnm = {'%.3f' % a_eval_R_D},\nb_mnm = {'%.3f' % b_eval_R_D}", xy=(0.0, min(y)))
+
+y = [2 + 2 * x[i] for i in range(len(x))]
+
+y_mnk = [a_eval + b_eval * x[i] for i in range(len(x))]
+y_mnm = [a_eval_R + b_eval_R * x[i] for i in range(len(x))]
+
+plt.subplot(2, 2, 3)
+plt.plot(x, y, color='crimson',  label="эталонная зависимость")
+plt.plot(x, y_mnk, '--', color='cornflowerblue', label="робастная оценка МНК")
+plt.plot(x, y_mnm, '--', color='yellowgreen', label="робастная оценка МНМ")
+plt.title("Без возмущений линейная лависимость без ошибки")
+plt.legend()
+plt.xlabel(r'$x_i$')
+plt.ylabel(r'$y_i = a + b * x_i$')
+plt.annotate(f"a_mnk = {'%.3f' % a_eval}, \nb_mnk = {'%.3f' % b_eval}, "
+             f"\na_mnm = {'%.3f' % a_eval_R}, \nb_mnm = {'%.3f' % b_eval_R}", xy=(0.5, min(y)))
+
+
+y_mnk_D = [a_eval_D + b_eval_D * x[i] for i in range(len(x))]
+y_mnm_D = [a_eval_R_D + b_eval_R_D * x[i] for i in range(len(x))]
+
+plt.subplot(2, 2, 4)
+plt.plot(x, y, color='crimson',  label="эталонная зависимость")
+plt.plot(x, y_mnk_D, '--', color='cornflowerblue', label="робастная оценка МНК")
+plt.plot(x, y_mnm_D, '--', color='yellowgreen', label="робастная оценка МНМ")
+plt.title("С возмущениями линейная лависимость без ошибки")
+plt.legend()
+plt.xlabel(r'$x_i$')
+plt.ylabel(r'$y_i = a + b * x_i$')
+plt.annotate(f"a_mnk = {'%.3f' % a_eval_D},\nb_mnk = {'%.3f' % b_eval_D},"
+             f" \na_mnm = {'%.3f' % a_eval_R_D},\nb_mnm = {'%.3f' % b_eval_R_D}", xy=(0.0, min(y)))
+
+
+plt.show()
